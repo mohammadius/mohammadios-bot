@@ -1,0 +1,29 @@
+{
+	"name": "mohammadios-bot",
+	"version": "1.0.0",
+	"description": "",
+	"source": "src/bot.ts",
+	"main": "build/main.js",
+	"scripts": {
+		"build": "tsc",
+		"cleanbuild": "rimraf ./build && tsc"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"@types/node": "^20.1.4",
+		"rimraf": "^5.0.0",
+		"typescript": "^5.0.4"
+	},
+	"dependencies": {
+		"@datalust/winston-seq": "^2.0.0",
+		"@grammyjs/menu": "^1.2.0",
+		"file-type": "^18.4.0",
+		"grammy": "^1.16.0",
+		"node-id3": "^0.2.6",
+		"winston": "^3.8.2",
+		"youtube-search-without-api-key": "github:DaliuSinger/youtube-search",
+		"ytdl-core": "^4.11.4"
+	}
+}
