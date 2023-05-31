@@ -1,3 +1,4 @@
+import "dotenv/config";
 import { Bot, InputFile, session } from "grammy";
 import { Menu } from "@grammyjs/menu";
 import ytdl from "ytdl-core";
