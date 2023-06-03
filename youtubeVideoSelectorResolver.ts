@@ -63,9 +63,7 @@ export default async function (ctx: CommandContext<MyContext>, id: number) {
 		Buffer.from(await Deno.readFile(musicFileNameMp3))
 	);
 
-	await Deno.writeFile(musicFileNameMp3, new Uint8Array(mp3Buffer));
-
-	const audioMessage = await ctx.replyWithAudio(new InputFile(musicFileNameMp3), {
+	const audioMessage = await ctx.replyWithAudio(new InputFile(mp3Buffer, musicFileNameMp3), {
 		duration: parseInt(stream.format.approxDurationMs!) / 1000
 	});
 
