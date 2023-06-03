@@ -1,13 +1,12 @@
 import { Bot, session, type CommandContext } from "https://deno.land/x/grammy@v1.16.1/mod.ts";
 import { run, sequentialize } from "https://deno.land/x/grammy_runner@v2.0.3/mod.ts";
-import { Menu } from "https://deno.land/x/grammy_menu@v1.2.0/mod.ts";
-import { initialSession, type MyContext } from "./botHelpers.ts";
-import { searchMusic } from "./spotify.ts";
-import { logger } from "./logging.ts";
 import env from "./env.ts";
-import youtubeVideoSelectorResolver from "./youtubeVideoSelectorResolver.ts";
-import spotifyMusicSelectorResolver from "./spotifyMusicSelectorResolver.ts";
+import { logger } from "./logging.ts";
+import { initialSession, songSearchKeyboard, type MyContext } from "./botHelpers.ts";
 import { notEmpty } from "./utility.ts";
+import handleYoutubeSongSelect from "./handleYoutubeSongSelect.ts";
+import handleSpotifySongSelect from "./handleSpotifySongSelect.ts";
+import handleSearchCommand from "./handleSearchCommand.ts";
 
 const bot = new Bot<MyContext>(env.BOT_TOKEN);
 
@@ -24,51 +23,49 @@ bot.use(
 
 bot.use(session({ initial: initialSession }));
 
-export const ytVideoSelectorMenu = new Menu<MyContext>("youtube-video-selector")
-	.text("1", (ctx) => youtubeVideoSelectorResolver(ctx as CommandContext<MyContext>, 0))
-	.text("2", (ctx) => youtubeVideoSelectorResolver(ctx as CommandContext<MyContext>, 1))
-	.text("3", (ctx) => youtubeVideoSelectorResolver(ctx as CommandContext<MyContext>, 2))
-	.text("4", (ctx) => youtubeVideoSelectorResolver(ctx as CommandContext<MyContext>, 3))
-	.text("5", (ctx) => youtubeVideoSelectorResolver(ctx as CommandContext<MyContext>, 4));
-
-bot.use(ytVideoSelectorMenu);
-
-const spotifyMusicSelectorMenu = new Menu<MyContext>("spotify-music-selector")
-	.text("1", (ctx) => spotifyMusicSelectorResolver(ctx as CommandContext<MyContext>, 0, ytVideoSelectorMenu))
-	.text("2", (ctx) => spotifyMusicSelectorResolver(ctx as CommandContext<MyContext>, 1, ytVideoSelectorMenu))
-	.text("3", (ctx) => spotifyMusicSelectorResolver(ctx as CommandContext<MyContext>, 2, ytVideoSelectorMenu))
-	.text("4", (ctx) => spotifyMusicSelectorResolver(ctx as CommandContext<MyContext>, 3, ytVideoSelectorMenu))
-	.text("5", (ctx) => spotifyMusicSelectorResolver(ctx as CommandContext<MyContext>, 4, ytVideoSelectorMenu));
-
-bot.use(spotifyMusicSelectorMenu);
-
 // Handle the /start command.
 bot.command("start", (ctx) => ctx.reply("Welcome! Up and running."));
 
 // Handle the /search command.
 bot.command("search", async (ctx) => {
-	const query = ctx.match;
+	if (ctx.session.state !== "idle") {
+		ctx.session = initialSession();
+	}
+	ctx.session.state = "searchCommand";
 
-	if (!!query && query.length === 0) {
-		await ctx.reply("use /search to search for a song, like this:\n/search NK Elefante");
+	await ctx.reply("search a song with title and preferably artist", {
+		reply_markup: songSearchKeyboard
+	});
+});
+
+bot.on("message:text", async (ctx) => {
+	const msg = ctx.msg.text.trim();
+
+	if (msg.length === 0) {
+		await ctx.reply("try again!");
 		return;
 	}
 
-	logger.info("{username}: searched for {query}", { username: ctx.from?.username, query: query });
+	if (msg === "Cancel") {
+		await ctx.reply("cancelled!", { reply_markup: { remove_keyboard: true } });
+		ctx.session = initialSession();
+		return;
+	}
 
-	const result = await searchMusic(query);
-
-	logger.info("{username}: spotify search found {songs}", {
-		username: ctx.from?.username,
-		songs: result
-	});
-
-	ctx.session = initialSession();
-	ctx.session.spotifyMusics = result;
-
-	await ctx.reply(result.map((x, i) => `${i + 1}: ${x.artists.join(", ")} - ${x.name} (Album: ${x.albumName})`).join("\n"), {
-		reply_markup: spotifyMusicSelectorMenu
-	});
+	switch (ctx.session.state) {
+		case "idle":
+			await ctx.reply("use /help to see what i can do!");
+			break;
+		case "searchCommand":
+			await handleSearchCommand(ctx as CommandContext<MyContext>, msg);
+			break;
+		case "spotifySongSelect":
+			await handleSpotifySongSelect(ctx as CommandContext<MyContext>, msg);
+			break;
+		case "youtubeSongSelect":
+			await handleYoutubeSongSelect(ctx as CommandContext<MyContext>, msg);
+			break;
+	}
 });
 
 // const youtubeVideoIdRegex = /^(?:(?:https?:)?\/\/)?(?:(?:www|m)\.)?(?:(?:youtube(?:-nocookie)?\.com|youtu.be))(?:\/(?:[\w\-]+\?v=|embed\/|v\/)?)([\w\-]+)(?:\S+)?$/;
