@@ -10,6 +10,12 @@ import handleSearchCommand from "./handleSearchCommand.ts";
 
 const bot = new Bot<MyContext>(env.BOT_TOKEN);
 
+await bot.api.setMyCommands([
+	{ command: "start", description: "Start the bot" },
+	{ command: "help", description: "Show help text" },
+	{ command: "search", description: "Search for song to download" }
+]);
+
 logger.info("MohammadiosBot started!");
 
 bot.use(
@@ -25,6 +31,14 @@ bot.use(session({ initial: initialSession }));
 
 // Handle the /start command.
 bot.command("start", (ctx) => ctx.reply("Welcome! Up and running."));
+
+bot.command("help", (ctx) =>
+	ctx.reply(
+		"/help See this help message!\n" +
+			"/search Search and download a song from youtube with metadata from spotify!\n" +
+			"Downloaded songs also are forwarded to @MohammadiosBotSongs channel. you can check there to avoid downloading a song multiple times."
+	)
+);
 
 // Handle the /search command.
 bot.command("search", async (ctx) => {
