@@ -1,5 +1,6 @@
-import winston from "winston";
-import { SeqTransport } from "@datalust/winston-seq";
+import winston from "npm:winston";
+import { SeqTransport } from "npm:@datalust/winston-seq";
+import env from "./env.ts";
 
 export const logger = winston.createLogger({
 	level: "info",
@@ -13,7 +14,7 @@ export const logger = winston.createLogger({
 		}),
 		new SeqTransport({
 			serverUrl: "http://mohammadios.wip.la:5341",
-			apiKey: "2P86Z6dw0Tl6sJX2vqMt",
+			apiKey: env.SEQ_KEY,
 			onError: (e) => {
 				console.error(e);
 			},

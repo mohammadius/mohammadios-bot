@@ -1,27 +1,24 @@
-import { Image, SpotifySearchResponse } from "./spotify.types";
+import { encode as toBase64 } from "https://deno.land/std@0.190.0/encoding/base64.ts";
+import { type SpotifySearchResponse } from "./spotify.types.ts";
+import env from "./env.ts";
 
-const toBase64 = (input: string) => {
-	return Buffer.from(input).toString("base64");
+const getAccessTokenRequestOptions: RequestInit = {
+	method: "POST",
+	headers: {
+		Authorization: `Basic ${toBase64(`${env.SPOTIFY_ID}:${env.SPOTIFY_SECRET}`)}`,
+		"Content-Type": "application/x-www-form-urlencoded"
+	},
+	body: "grant_type=client_credentials"
 };
 
-const clientId = process.env.SPOTIFY_ID;
-const clientSecret = process.env.SPOTIFY_SECRET;
-
-let tokenData = { accessToken: "", expiresAfter: 0 };
+const tokenData = { accessToken: "", expiresAfter: 0 };
 
 export const getAccessToken = async () => {
 	if (Date.now() < tokenData.expiresAfter) {
 		return tokenData.accessToken;
 	}
 
-	const response = await fetch("https://accounts.spotify.com/api/token", {
-		method: "POST",
-		headers: {
-			Authorization: `Basic ${toBase64(`${clientId}:${clientSecret}`)}`,
-			"Content-Type": "application/x-www-form-urlencoded"
-		},
-		body: "grant_type=client_credentials"
-	});
+	const response = await fetch("https://accounts.spotify.com/api/token", getAccessTokenRequestOptions);
 
 	const { access_token: accessToken }: { access_token: string } = await response.json();
 
