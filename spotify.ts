@@ -1,5 +1,5 @@
 import { encode as toBase64 } from "https://deno.land/std@0.190.0/encoding/base64.ts";
-import { type SpotifySearchResponse } from "./spotify.types.ts";
+import type { AccessToken, SearchContent } from "npm:spotify-types";
 import env from "./env.ts";
 
 const getAccessTokenRequestOptions: RequestInit = {
@@ -20,7 +20,7 @@ export const getAccessToken = async () => {
 
 	const response = await fetch("https://accounts.spotify.com/api/token", getAccessTokenRequestOptions);
 
-	const { access_token: accessToken }: { access_token: string } = await response.json();
+	const { access_token: accessToken }: AccessToken = await response.json();
 
 	tokenData.accessToken = accessToken;
 	tokenData.expiresAfter = Date.now() + 3300000;
@@ -51,9 +51,9 @@ export const searchMusic: (query: string) => Promise<SpotifyMusicInfo[]> = async
 		}
 	});
 
-	const { tracks }: SpotifySearchResponse = await response.json();
+	const { tracks }: SearchContent = await response.json();
 
-	return tracks.items.map((item) => ({
+	return tracks!.items.map((item) => ({
 		name: item.name,
 		trackNumber: item.track_number,
 		duration: Math.round(item.duration_ms / 1000),
@@ -61,7 +61,9 @@ export const searchMusic: (query: string) => Promise<SpotifyMusicInfo[]> = async
 		albumName: item.album.name,
 		albumReleaseYear: item.album.release_date.slice(0, 4),
 		albumArtists: item.album.artists.map((artist) => artist.name),
-		albumImage: item.album.images.reduce((prev, current) => (prev.width > current.width ? prev : current)).url,
+		albumImage: item.album.images.reduce((prev, current) =>
+			(prev.width ?? prev.height ?? 1) > (current.width ?? current.height ?? 0) ? prev : current
+		).url,
 		totalTracks: item.album.total_tracks
 	}));
 };
