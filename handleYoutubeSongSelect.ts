@@ -22,6 +22,8 @@ const ytdlDownloadOptions: DownloadOptions = {
 
 export default async function handleYoutubeSongSelect(ctx: CommandContext<MyContext>, message: string) {
 	try {
+		const processingMessagePromise = ctx.reply("processing...");
+
 		let id = parseInt(message) - 1;
 
 		if (id < 0) {
@@ -76,14 +78,15 @@ export default async function handleYoutubeSongSelect(ctx: CommandContext<MyCont
 			reply_markup: { remove_keyboard: true }
 		});
 
-		ctx.session = initialSession();
-
 		await Promise.allSettled([
+			ctx.api.deleteMessage(ctx.chat.id, (await processingMessagePromise).message_id),
 			ctx.api.forwardMessage("@MohammadiosBotSongs", ctx.chat.id, audioMessage.message_id),
 			Deno.remove(musicFileNameWithExt),
 			Deno.remove(imageFileName),
 			Deno.remove(musicFileNameMp3)
 		]);
+
+		ctx.session = initialSession();
 	} catch (e) {
 		logger.error("{username}: error in handleYoutubeSongSelect: {error}", {
 			username: ctx.from?.username,
