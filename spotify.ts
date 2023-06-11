@@ -2,6 +2,7 @@ import { encode as toBase64 } from "https://deno.land/std@0.190.0/encoding/base6
 import type { AccessToken, SearchContent } from "npm:spotify-types";
 import env from "./env.ts";
 import redis from "./redis.ts";
+import { spotifyMusicInfoArrayZod, type SpotifyMusicInfoArray } from "./types/spotify.ts";
 
 const getAccessTokenRequestOptions: RequestInit = {
 	method: "POST",
@@ -28,19 +29,7 @@ export const getAccessToken = async () => {
 	return access_token;
 };
 
-export type SpotifyMusicInfo = {
-	name: string;
-	trackNumber: number;
-	duration: number;
-	artists: string[];
-	albumName: string;
-	albumReleaseYear: string;
-	albumArtists: string[];
-	albumImage: string;
-	totalTracks: number;
-};
-
-export const searchMusic: (query: string) => Promise<SpotifyMusicInfo[]> = async (query: string) => {
+export const searchMusic: (query: string) => Promise<SpotifyMusicInfoArray> = async (query: string) => {
 	const searchMusicRequestOptions: RequestInit = {
 		method: "GET",
 		headers: {
@@ -53,17 +42,19 @@ export const searchMusic: (query: string) => Promise<SpotifyMusicInfo[]> = async
 
 	const { tracks }: SearchContent = await response.json();
 
-	return tracks!.items.map((item) => ({
-		name: item.name,
-		trackNumber: item.track_number,
-		duration: Math.round(item.duration_ms / 1000),
-		artists: item.artists.map((artist) => artist.name),
-		albumName: item.album.name,
-		albumReleaseYear: item.album.release_date.slice(0, 4),
-		albumArtists: item.album.artists.map((artist) => artist.name),
-		albumImage: item.album.images.reduce((prev, current) =>
-			(prev.width ?? prev.height ?? 1) > (current.width ?? current.height ?? 0) ? prev : current
-		).url,
-		totalTracks: item.album.total_tracks
-	}));
+	return spotifyMusicInfoArrayZod.parse(
+		tracks!.items.map((item) => ({
+			name: item.name,
+			trackNumber: item.track_number,
+			duration: Math.round(item.duration_ms / 1000),
+			artists: item.artists.map((artist) => artist.name),
+			albumName: item.album.name,
+			albumReleaseYear: item.album.release_date.slice(0, 4),
+			albumArtists: item.album.artists.map((artist) => artist.name),
+			albumImage: item.album.images.reduce((prev, current) =>
+				(prev.width ?? prev.height ?? 1) > (current.width ?? current.height ?? 0) ? prev : current
+			).url,
+			totalTracks: item.album.total_tracks
+		}))
+	);
 };

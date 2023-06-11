@@ -1,8 +1,10 @@
 import type { StorageAdapter } from "https://deno.land/x/grammy@v1.16.1/mod.ts";
 import type { Redis } from "https://deno.land/x/redis@v0.30.0/mod.ts";
 import redis from "./redis.ts";
+import { type SessionData, sessionDataZod } from "./types/bot.ts";
+import { initialSession } from "./botHelpers.ts";
 
-export class RedisAdapter<T> implements StorageAdapter<T> {
+export class RedisAdapter implements StorageAdapter<SessionData> {
 	private redis: Redis;
 
 	constructor() {
@@ -11,14 +13,16 @@ export class RedisAdapter<T> implements StorageAdapter<T> {
 
 	async read(key: string) {
 		const session = await this.redis.get(key);
-		if (session === null || session === undefined) {
-			return undefined;
+		const result = sessionDataZod.safeParse(JSON.parse(session ?? "0"));
+		if (result.success) {
+			return result.data;
 		}
-		return JSON.parse(session) as T;
 	}
 
-	async write(key: string, value: T) {
-		await this.redis.set(key, JSON.stringify(value));
+	async write(key: string, value: SessionData) {
+		const result = sessionDataZod.safeParse(value);
+		JSON.stringify(result.success ? result.data : initialSession());
+		await this.redis.set(key, JSON.stringify(result.success ? result.data : initialSession()));
 	}
 
 	async delete(key: string) {

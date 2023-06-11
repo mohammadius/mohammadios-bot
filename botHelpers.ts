@@ -1,17 +1,5 @@
-import { type Context, type SessionFlavor } from "https://deno.land/x/grammy@v1.16.1/mod.ts";
 import { Keyboard } from "https://deno.land/x/grammy@v1.16.1/convenience/keyboard.ts";
-import { SpotifyMusicInfo } from "./spotify.ts";
-
-// Define the shape of our session.
-export interface SessionData {
-	state: "idle" | "searchCommand" | "spotifySongSelect" | "youtubeSongSelect";
-	spotifyMusics: SpotifyMusicInfo[];
-	selectedSpotifyMusic: number | null;
-	youtubeVideos: string[];
-}
-
-// Flavor the context type to include sessions.
-export type MyContext = Context & SessionFlavor<SessionData>;
+import { type SessionData } from "./types/bot.ts";
 
 export const initialSession: () => SessionData = () => ({
 	state: "idle",
