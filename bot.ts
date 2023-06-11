@@ -2,11 +2,12 @@ import { Bot, session, type CommandContext } from "https://deno.land/x/grammy@v1
 import { run, sequentialize } from "https://deno.land/x/grammy_runner@v2.0.3/mod.ts";
 import env from "./env.ts";
 import { logger } from "./logging.ts";
-import { initialSession, songSearchKeyboard, type MyContext } from "./botHelpers.ts";
+import { initialSession, songSearchKeyboard, type MyContext, type SessionData } from "./botHelpers.ts";
 import { notEmpty } from "./utility.ts";
 import handleYoutubeSongSelect from "./handleYoutubeSongSelect.ts";
 import handleSpotifySongSelect from "./handleSpotifySongSelect.ts";
 import handleSearchCommand from "./handleSearchCommand.ts";
+import { RedisAdapter } from "./redisAdapter.ts";
 
 const bot = new Bot<MyContext>(env.BOT_TOKEN);
 
@@ -27,7 +28,7 @@ bot.use(
 	})
 );
 
-bot.use(session({ initial: initialSession }));
+bot.use(session({ initial: initialSession, storage: new RedisAdapter<SessionData>() }));
 
 // Handle the /start command.
 bot.command("start", (ctx) => ctx.reply("Welcome! Up and running."));
