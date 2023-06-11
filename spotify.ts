@@ -1,6 +1,7 @@
 import { encode as toBase64 } from "https://deno.land/std@0.190.0/encoding/base64.ts";
 import type { AccessToken, SearchContent } from "npm:spotify-types";
 import env from "./env.ts";
+import redis from "./redis.ts";
 
 const getAccessTokenRequestOptions: RequestInit = {
 	method: "POST",
@@ -11,21 +12,20 @@ const getAccessTokenRequestOptions: RequestInit = {
 	body: "grant_type=client_credentials"
 };
 
-const tokenData = { accessToken: "", expiresAfter: 0 };
-
 export const getAccessToken = async () => {
-	if (Date.now() < tokenData.expiresAfter) {
-		return tokenData.accessToken;
+	const oldToken = await redis.get("spotifyAccessToken");
+
+	if (oldToken !== null && oldToken !== undefined) {
+		return oldToken;
 	}
 
 	const response = await fetch("https://accounts.spotify.com/api/token", getAccessTokenRequestOptions);
 
-	const { access_token: accessToken }: AccessToken = await response.json();
+	const { access_token, expires_in }: AccessToken = await response.json();
 
-	tokenData.accessToken = accessToken;
-	tokenData.expiresAfter = Date.now() + 3300000;
+	await redis.set("spotifyAccessToken", access_token, { ex: expires_in - 300 });
 
-	return accessToken;
+	return access_token;
 };
 
 export type SpotifyMusicInfo = {
@@ -41,15 +41,15 @@ export type SpotifyMusicInfo = {
 };
 
 export const searchMusic: (query: string) => Promise<SpotifyMusicInfo[]> = async (query: string) => {
-	const accessToken = await getAccessToken();
-
-	const url = "https://api.spotify.com/v1/search?" + new URLSearchParams({ q: query, type: "track", limit: "5" });
-	const response = await fetch(url, {
+	const searchMusicRequestOptions: RequestInit = {
 		method: "GET",
 		headers: {
-			Authorization: `Bearer ${accessToken}`
+			Authorization: `Bearer ${await getAccessToken()}`
 		}
-	});
+	};
+
+	const url = "https://api.spotify.com/v1/search?" + new URLSearchParams({ q: query, type: "track", limit: "5" });
+	const response = await fetch(url, searchMusicRequestOptions);
 
 	const { tracks }: SearchContent = await response.json();
 
