@@ -1,6 +1,7 @@
 import { type CommandContext } from "https://deno.land/x/grammy@v1.16.1/mod.ts";
 import { logger } from "./logging.ts";
-import { selectionKeyboard, type MyContext } from "./botHelpers.ts";
+import { selectionKeyboard } from "./botHelpers.ts";
+import { type MyContext } from "./types/bot.ts";
 import { searchMusic } from "./spotify.ts";
 
 export default async function handleSearchCommand(ctx: CommandContext<MyContext>, message: string) {

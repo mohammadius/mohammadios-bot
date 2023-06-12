@@ -1,5 +1,6 @@
 import { type CommandContext } from "https://deno.land/x/grammy@v1.16.1/mod.ts";
-import { selectionKeyboard, type MyContext } from "./botHelpers.ts";
+import { selectionKeyboard } from "./botHelpers.ts";
+import { type MyContext } from "./types/bot.ts";
 import { logger } from "./logging.ts";
 import { search as ytSearch } from "./youtube-search/mod.ts";
 

@@ -3,8 +3,8 @@ import { InputFile, type CommandContext } from "https://deno.land/x/grammy@v1.16
 import ytdl from "https://deno.land/x/ytdl_core@v0.1.2/mod.ts";
 import { type DownloadOptions } from "https://deno.land/x/ytdl_core@v0.1.2/src/types.ts";
 import NodeID3 from "npm:node-id3";
-import { initialSession, type MyContext } from "./botHelpers.ts";
-import { SpotifyMusicInfo } from "./spotify.ts";
+import { initialSession } from "./botHelpers.ts";
+import { type MyContext } from "./types/bot.ts";
 import { downloadImage } from "./utility.ts";
 import { logger } from "./logging.ts";
 
@@ -32,8 +32,7 @@ export default async function handleYoutubeSongSelect(ctx: CommandContext<MyCont
 			id = 5;
 		}
 		const selectedVideo = ctx.session.youtubeVideos[id];
-		const musicInfo: SpotifyMusicInfo = ctx.session.spotifyMusics[ctx.session.selectedSpotifyMusic!];
-
+		const musicInfo = ctx.session.spotifyMusics[ctx.session.selectedSpotifyMusic!];
 		const musicFileName = `${musicInfo.artists[0]} - ${musicInfo.name}`;
 		const imageFileName = await downloadImage(musicInfo.albumImage, musicFileName);
 
