@@ -22,7 +22,7 @@ const ytdlDownloadOptions: DownloadOptions = {
 
 export default async function handleYoutubeSongSelect(ctx: CommandContext<MyContext>, message: string) {
 	try {
-		const processingMessagePromise = ctx.reply("processing...");
+		const processingMessagePromise = ctx.reply("processing...", { reply_markup: { remove_keyboard: true } });
 
 		let id = parseInt(message) - 1;
 
@@ -73,8 +73,7 @@ export default async function handleYoutubeSongSelect(ctx: CommandContext<MyCont
 		);
 
 		const audioMessage = await ctx.replyWithAudio(new InputFile(mp3Buffer, musicFileNameMp3), {
-			duration: parseInt(stream.format.approxDurationMs!) / 1000,
-			reply_markup: { remove_keyboard: true }
+			duration: parseInt(stream.format.approxDurationMs!) / 1000
 		});
 
 		await Promise.allSettled([
