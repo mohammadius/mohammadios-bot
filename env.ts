@@ -5,7 +5,8 @@ const envZod = z.object({
 	BOT_TOKEN: z.string(),
 	SPOTIFY_ID: z.string(),
 	SPOTIFY_SECRET: z.string(),
-	SEQ_KEY: z.string()
+	SEQ_KEY: z.string(),
+	REDIS_PASS: z.string()
 });
 
 const env = await mod.load({ envPath: new URL(".env", import.meta.url).pathname });
@@ -14,5 +15,6 @@ export default envZod.parse({
 	BOT_TOKEN: env.BOT_TOKEN,
 	SPOTIFY_ID: env.SPOTIFY_ID,
 	SPOTIFY_SECRET: env.SPOTIFY_SECRET,
-	SEQ_KEY: env.SEQ_KEY
+	SEQ_KEY: env.SEQ_KEY,
+	REDIS_PASS: env.REDIS_PASS
 });
