@@ -26,6 +26,7 @@ export default async function handleSearchCommand(ctx: CommandContext<MyContext>
 			}
 		);
 	} catch (e) {
+		await ctx.reply("Something went wrong! try again later...", { reply_markup: { remove_keyboard: true } });
 		logger.error("{username}: error in handleSearchCommand: {error}", {
 			username: ctx.from?.username,
 			error: e
